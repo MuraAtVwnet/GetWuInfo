@@ -33,7 +33,7 @@ $ClientOsVertionTable = @{
 	"1903" = "Windows 10 Version 1903"
 	"1909" = "Windows 10 Version 1909"
 	"2004" = "Windows 10 Version 2004"
-	"20H2" = "Windows 10 Version 20H2"
+	"2009" = "Windows 10 Version 20H2"
 }
 
 <#
@@ -109,11 +109,14 @@ else{
 
 $TergetMonth = [string]$TergetDay.Year + "-" + $MonthTable[$TergetDay.Month]
 
-#if( (Get-Module MSRCSecurityUpdates) -eq $null ){
-#	Install-Module MSRCSecurityUpdates -Force
-#}
+try{
+	Import-Module MSRCSecurityUpdates -ErrorAction Stop
+}
+catch{
+	Install-Module MSRCSecurityUpdates -Force
+	Import-Module MSRCSecurityUpdates
+}
 
-Import-Module MSRCSecurityUpdates
 
 Set-MSRCApiKey -Verbose -ApiKey "7ac1e01ac58840c190f9e519ccf7cb47"
 $cvrfDoc = Get-MsrcCvrfDocument -ID $TergetMonth
