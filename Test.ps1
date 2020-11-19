@@ -93,6 +93,15 @@ function GetWindowsUpdateDay([datetime]$TergetDate){
 ###############################################
 # Main
 ###############################################
+
+if( ($PSVersionTable.PSVersion.Major -ne 5) -or ($PSVersionTable.PSVersion.Minor -ne 1)){
+	echo "このスクリプト実行には Windows PowerShell 5.1 が必要です"
+	echo "https://docs.microsoft.com/ja-jp/powershell/scripting/windows-powershell/install/windows-powershell-system-requirements"
+	exit
+}
+
+
+
 # 今月のWu日
 [datetime]$WuDay = GetWindowsUpdateDay
 
