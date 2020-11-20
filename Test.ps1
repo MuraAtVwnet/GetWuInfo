@@ -147,8 +147,7 @@ foreach( $Vulnerability in $Vulnerabilitys){
 	$CVE = $Vulnerability.CVE
 
 	# リリース日
-	[array]$Dates = $Vulnerability.RevisionHistory.Date
-	$ReleaseDate = ($Dates | Sort-Object )[0]
+	[datetime]$ReleaseDate = ($Vulnerability.RevisionHistory | Sort-Object -Property Date)[0].Date
 
 	# セキュリティ更新の抽出
 	[array]$Remediations = $Vulnerability.Remediations | ? Type -eq 2
