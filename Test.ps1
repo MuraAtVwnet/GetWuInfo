@@ -1,13 +1,14 @@
 ﻿
 
+# セキュリティ更新を格納するオブジェクト
 class UpdateClass {
-	[string] $CVE
-	# [string] $Date
-	[string] $KB
-	# [string] $Type
-	[string] $SubType
-	[string] $ProductName
-	[string] $URI
+	[string] $CVE			# CVE 番号
+	[string] $ReleaseDate	# リリース日
+	[string] $KB			# KB 番号
+	[string] $SubType		# 更新の種類
+	[string] $ProductID		# プロダクト ID
+	[string] $ProductName	# プロダクト名
+	[string] $URI			# KB の URI
 }
 
 $MonthTable = @{
@@ -127,46 +128,61 @@ catch{
 }
 
 
-Set-MSRCApiKey -Verbose -ApiKey "7ac1e01ac58840c190f9e519ccf7cb47"
+Set-MSRCApiKey -ApiKey "7ac1e01ac58840c190f9e519ccf7cb47"
 $cvrfDoc = Get-MsrcCvrfDocument -ID $TergetMonth
 
 # プロダクト名
-$ProductTree = $cvrfDoc.ProductTree
-$FullProductName = $ProductTree.FullProductName
-# ProductID でマッチングし、Valueでプロダクトを埋める
+$FullProductName = $cvrfDoc.ProductTree.FullProductName
 
 
+# プロダクト別のセキュリティ更新
 $Updates = @()
 
 # セキュリティ更新
 [array]$Vulnerabilitys = $cvrfDoc.Vulnerability
+
+# CVE ごとの処理
 foreach( $Vulnerability in $Vulnerabilitys){
 
 	$CVE = $Vulnerability.CVE
 
-	# [array]$Dates = $Vulnerability.RevisionHistory.Date
-    # $Date = ($Dates | Sort-Object -Descending)[0]
+	# リリース日
+	[array]$Dates = $Vulnerability.RevisionHistory.Date
+	$ReleaseDate = ($Dates | Sort-Object )[0]
 
-	$Remediations = $Vulnerability.Remediations | ? Type -eq 2
+	# セキュリティ更新の抽出
+	[array]$Remediations = $Vulnerability.Remediations | ? Type -eq 2
 
+	# セキュリティ更新ごとの処理
 	foreach( $Remediation in $Remediations ){
+
+		# KB 番号が数値のデータの未処理
 		if($Remediation.Description.Value -match "[0-9]+"){
+
+			# KB 番号
 			$KB = $Remediation.Description.Value
-			$Type = $Remediation.Type
+
+			# 更新の種類
 			$SubType = $Remediation.SubType
 
+			# プロダクトの展開
 			[array]$ProductIDs = $Remediation.ProductID
+
+			# プロダクト後の処理
 			foreach( $ProductID in $ProductIDs ){
+
+				# プロダクト ID からプロダクト名を取得
 				$ProductName = ($FullProductName | ? ProductID -eq $ProductID).Value
 				if( $ProductName -match "^Windows" ){
-					$Update = New-Object UpdateClass
 
+					# 各値のセット
+					$Update = New-Object UpdateClass
 					$Update.CVE = $CVE
-					# $Update.Date = $Date.ToString()
+					$Update.ReleaseDate = $ReleaseDate.ToString()
 					$Update.KB = $KB
-					# $Update.Type = $Type
 					$Update.SubType = $SubType
-					$Update.ProductName = ($FullProductName | ? ProductID -eq $ProductID).Value
+					$Update.ProductID = $ProductID
+					$Update.ProductName = $ProductName
 					$Update.URI = "https://support.microsoft.com/ja-jp/help/" + $KB
 
 					$Updates += $Update
@@ -176,9 +192,10 @@ foreach( $Vulnerability in $Vulnerabilitys){
 	}
 }
 
+
 # $Updates | Export-Csv C:\Test\WUs.csv -Encoding OEM
 
-# $Updates | Sort-Object -Property KB, ProductName -Unique | Export-Csv C:\Test\WUs.csv -Encoding OEM
+# $Updates | Sort-Object -Property KB, ProductID -Unique | Export-Csv C:\Test\WUs.csv -Encoding OEM
 
 
 # OS のエディション
@@ -213,20 +230,20 @@ echo $WuKBs
 $HitFlag = $false
 
 foreach ( $WuKB in $WuKBs ){
-    $KbName = "KB" + $WuKB.KB
-    if( $HotFixs.HotFixID -contains $KbName ){
-        $HitFlag = $true
-    }
-    else{
-        $HitFlag = $false
-    }
+	$KbName = "KB" + $WuKB.KB
+	if( $HotFixs.HotFixID -contains $KbName ){
+		$HitFlag = $true
+	}
+	else{
+		$HitFlag = $false
+	}
 }
 
 if( $HitFlag ){
-    echo "最新の WU が当たっています"
+	echo "最新の WU が当たっています"
 }
 else{
-    echo "最新の WU が当たっていません"
+	echo "最新の WU が当たっていません"
 }
 
 <#
