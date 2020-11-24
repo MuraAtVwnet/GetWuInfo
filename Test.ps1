@@ -198,8 +198,9 @@ foreach( $Vulnerability in $Vulnerabilitys){
 
 
 # OS のエディション
-$Win32_OperatingSystem = Get-WmiObject Win32_OperatingSystem
-$OS = $Win32_OperatingSystem.Caption
+$RegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
+$RegKey = "ProductName"
+$OS = (Get-ItemProperty $RegPath -name $RegKey -ErrorAction SilentlyContinue).$RegKey
 
 # Windows 10
 if( $OS  -match "Windows 10" ){
