@@ -109,7 +109,7 @@ function GetSecurityUpdateKBs([datetime]$TergetDay){
 		echo "必要モジュールがインストールされていません"
 		echo "以下手順でモジュールをインストールしてください(要管理権限)"
 		echo "Install-Module MSRCSecurityUpdates -Force"
-		exit
+		return $null
 	}
 
 	Set-MSRCApiKey -ApiKey $APIKey
