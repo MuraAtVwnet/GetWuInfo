@@ -78,7 +78,7 @@ function GetSecurityUpdateKBs([string]$APIKey, [datetime]$TergetDay){
 		# セキュリティ更新ごとの処理
 		foreach( $Remediation in $Remediations ){
 
-			# KB 番号が数値のデータの未処理
+			# Description が数値のデータのみ処理(KB番号がセットされている)
 			if($Remediation.Description.Value -match "[0-9]+"){
 
 				# KB 番号
@@ -90,7 +90,7 @@ function GetSecurityUpdateKBs([string]$APIKey, [datetime]$TergetDay){
 				# プロダクトの展開
 				[array]$ProductIDs = $Remediation.ProductID
 
-				# プロダクト後の処理
+				# プロダクトごとの処理
 				foreach( $ProductID in $ProductIDs ){
 					# 各値のセット
 					$Update = New-Object UpdateClass
