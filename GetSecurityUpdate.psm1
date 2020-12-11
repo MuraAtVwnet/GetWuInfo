@@ -45,9 +45,9 @@ function GetSecurityUpdateKBs([string]$APIKey, [datetime]$TergetDay){
 		Import-Module MSRCSecurityUpdates -ErrorAction Stop
 	}
 	catch{
-		echo "必要モジュールがインストールされていません"
-		echo "以下手順でモジュールをインストールしてください(要管理権限)"
-		echo "Install-Module MSRCSecurityUpdates -Force"
+		# 必要モジュールがインストールされていません
+		# 以下手順でモジュールをインストールしてください(要管理権限)
+		# Install-Module MSRCSecurityUpdates -Force
 		return $null
 	}
 

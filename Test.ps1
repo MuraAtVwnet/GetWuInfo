@@ -2,14 +2,14 @@
 
 
 $Windows10VertionTable = @{
-	"10240" = "Windows 10 for"
-	"1607" = "Windows 10 Version 1607"
-	"1803" = "Windows 10 Version 1803"
-	"1809" = "Windows 10 Version 1809"
-	"1903" = "Windows 10 Version 1903"
-	"1909" = "Windows 10 Version 1909"
-	"2004" = "Windows 10 Version 2004"
-	"2009" = "Windows 10 Version 20H2"
+	"10240" = "Windows 10 for x64-based Systems"
+	"1607" = "Windows 10 Version 1607 for x64-based Systems"
+	"1803" = "Windows 10 Version 1803 for x64-based Systems"
+	"1809" = "Windows 10 Version 1809 for x64-based Systems"
+	"1903" = "Windows 10 Version 1903 for x64-based Systems"
+	"1909" = "Windows 10 Version 1909 for x64-based Systems"
+	"2004" = "Windows 10 Version 2004 for x64-based Systems"
+	"2009" = "Windows 10 Version 20H2 for x64-based Systems"
 }
 
 $WindowsServerVertionTable = @{
@@ -106,13 +106,20 @@ $APIKey = "7ac1e01ac58840c190f9e519ccf7cb47"
 # KB 取得
 [array]$Updates = GetSecurityUpdateKBs $APIKey $TergetDay
 
+if( $Updates -eq $null ){
+		echo "必要モジュールがインストールされていません"
+		echo "以下手順でモジュールをインストールしてください(要管理権限)"
+		echo "Install-Module MSRCSecurityUpdates -Force"
+		exit
+}
+
 $Updates | Sort-Object -Property ProductID, KB -Unique | Export-Csv ~\Documents\KBs.csv -Encoding OEM
 
 # $Updates | Export-Csv C:\Test\WUs.csv -Encoding OEM
 
 # $Updates | Sort-Object -Property KB, ProductID -Unique | Export-Csv C:\Test\WUs.csv -Encoding OEM
 
-
+### OS 特定の判断材料
 # OS のエディション
 $RegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
 $RegKey = "ProductName"
@@ -123,9 +130,12 @@ $RegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion"
 $RegKey = "ReleaseId"
 $OSVertion = (Get-ItemProperty $RegPath -name $RegKey -ErrorAction SilentlyContinue).$RegKey
 
+# x64 か
+$ISx64 = Test-Path "HKLM:\HARDWARE\RESOURCEMAP\Hardware Abstraction Layer\ACPI x64 platform"
 
+### OS 判定
 # Windows 10
-if( $OS  -match "Windows 10" ){
+if( ($OS  -match "Windows 10") -and $ISx64 ){
 
 	if( $OSVertion -eq $null ){
 		$OSVertion = "10240"
@@ -134,7 +144,7 @@ if( $OS  -match "Windows 10" ){
 	$SelectString = $Windows10VertionTable[$OSVertion]
 }
 # Windows Server 実装 例(例レベルなので、Windows Server で使うのであればちゃんと実装する必要あり)
-elseif( $OS  -match "Windows Server" ){
+elseif( ($OS  -match "Windows Server") -and $ISx64 ){
 	if( $WindowsServerVertionTable.ContainsKey($OSVertion) ){
 		$SelectString = $WindowsServerVertionTable[$OSVertion]
 	}
@@ -150,7 +160,8 @@ else{
 	exit
 }
 
-[array]$WuKBs = $Updates | ? ProductName -Match $SelectString | Sort-Object -Property KB -Unique
+### 最新の更新が適用されているか確認
+[array]$WuKBs = $Updates | ? ProductName -eq $SelectString | Sort-Object -Property KB -Unique
 
 echo $WuKBs
 
